@@ -192,10 +192,12 @@ namespace WeShallNotPass.ViewModel
             {
                 ind++;
             }
+
             if (ind < Items.Count)
             {
                 Items.RemoveAt(ind);
                 OnPropertyChanged("Items");
+                OnPropertyChanged("VisitorCount");
             }
         }
 
