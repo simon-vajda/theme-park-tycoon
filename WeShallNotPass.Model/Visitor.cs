@@ -22,9 +22,46 @@ namespace WeShallNotPass.Model
         public int DX { get; private set; }
         public int DY { get; private set; }
         public int Money { get; set; }
-        public int Satiety { get; set; }
-        public int Mood { get; set; }
-        public int RestroomNeeds { get; set; }
+        private int satiety;
+        public int Satiety {
+            get
+            {
+                return satiety;
+            }
+            set
+            {
+                satiety = value;
+                if (value <= 0) satiety = 0;
+                if (value >= 100) satiety = 100;
+            }
+        }
+        private int mood;
+        public int Mood {
+            get
+            {
+                return mood;
+            }
+            set
+            {
+                mood = value;
+                if (value <= 0) mood = 0;
+                if (value >= 100) mood = 100;
+            }
+        }
+        private int restroomNeeds;
+        public int RestroomNeeds {
+            get
+            {
+                return restroomNeeds;
+            }
+            set
+            {
+                restroomNeeds = value;
+                if (value <= 0) restroomNeeds = 0;
+                if (value >= 100) restroomNeeds = 100;
+            }
+        }
+        public int WaitTime { get; set; }
         public Uri Image { get; set; }
         public int AtActivitiTime { get; set; }
 
@@ -36,6 +73,7 @@ namespace WeShallNotPass.Model
 
 
         public VisitorsStatus Status { get; set; }
+        public bool Leaving { get; private set; }
         #endregion
 
         #region Methods
@@ -49,6 +87,7 @@ namespace WeShallNotPass.Model
             RestroomNeeds = restroomNeeds;
             Image = image;
             Status = VisitorsStatus.WAITING;
+            Leaving = false;
 
             Random rnd = new Random();
 
@@ -67,13 +106,11 @@ namespace WeShallNotPass.Model
                     //TODO: mood increas
                     break;
                 case VisitorsStatus.WAITING_IN_QUEUE:
-                    //TODO: mood decreas
+                    
                     break;
                 case VisitorsStatus.WALKING:
                     Move();
                     break;
-                default:
-                    return;
             }
         }
 
@@ -145,6 +182,11 @@ namespace WeShallNotPass.Model
             if (Mood <= 0)
             {
                 _destination = mainEntrance;
+                if (_path != null) _path.Clear();
+                _path = FindPath(gameArea, gameAreaSize);
+                Status = VisitorsStatus.WALKING;
+                Leaving = true;
+                return;
             }
             else
             {

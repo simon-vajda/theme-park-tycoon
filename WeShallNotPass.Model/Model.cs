@@ -144,121 +144,155 @@ namespace WeShallNotPass.Model
 
             if (_time % 10 == 0) // a second has passed
             {
-                foreach (Visitor v in _visitors) // plants boost visitor's mood
+                foreach (Visitor v in _visitors) 
                 {
-                    int maxPlantBoost = 0;
-                    foreach (Plant p in _plants)
+                    if (_time % 30 == 0)
                     {
-                        if (Math.Abs((v.X / 64) - p.X) <= p.Radius && Math.Abs((v.Y / 64) - p.Y) <= p.Radius && maxPlantBoost < p.MoodBoost)
-                            maxPlantBoost = p.MoodBoost;
+                        v.RestroomNeeds--;
+                        v.Satiety--;
+                        if (v.Satiety < 20) v.Mood--;
+                        if (v.RestroomNeeds < 20) v.Mood--;
+                        if (v.Status != VisitorsStatus.AT_ACTIVITY)
+                        {
+                            v.Mood--;
+                            if (v.Status == VisitorsStatus.WAITING_IN_QUEUE)
+                            {
+                                v.WaitTime++;
+                                v.Mood -= (int)Math.Floor(Math.Sqrt(v.WaitTime / 15));
+                            }
+                        }
                     }
-                    v.Mood += maxPlantBoost;
+                    if (v.Status == VisitorsStatus.WALKING)
+                    {
+                        int maxPlantBoost = 0; // plants boost visitor's mood
+                        foreach (Plant p in _plants)
+                        {
+                            if (Math.Abs((v.X / 64) - p.X) <= p.Radius && Math.Abs((v.Y / 64) - p.Y) <= p.Radius && maxPlantBoost < p.MoodBoost)
+                                maxPlantBoost = p.MoodBoost;
+                        }
+                        v.Mood += maxPlantBoost;
+                        
+                    }
                 }
 
-                foreach (Facility f in _restaurants)
+                foreach (Restaurant r in _restaurants)
                 {
-                    if (!f.IsBuilt)
+                    if (!r.IsBuilt)
                     {
-                        f.BuildTime--;
-                        if (f.BuildTime < 0) f.IsBuilt = true;
+                        r.BuildTime--;
+                        if (r.BuildTime < 0) r.IsBuilt = true;
                     }
-                    if (f.EndTimer <= 0)
+                    if (r.EndTimer <= 0)
                     {
-                        if (f.VisitorQueue.Count >= 1)
+                        if (r.VisitorQueue.Count >= 1)
                         {
-                            Visitor[] vis = f.VisitorQueue.ToArray();
-                            f.EndTimer = f.Duration;
-
-                            vis[0].Status = VisitorsStatus.AT_ACTIVITY;
-
-                            vis[0].Money -= (f as Restaurant).FoodPrice;
-
-
-                            Money += (f as Restaurant).FoodPrice;
+                            Visitor[] vis = r.VisitorQueue.ToArray();
+                            if (!vis[0].Leaving)
+                            {
+                                r.EndTimer = r.Duration;
+                                vis[0].Status = VisitorsStatus.AT_ACTIVITY;
+                                vis[0].Money -= r.FoodPrice;
+                                Money += r.FoodPrice;
+                            }
                         }
                     }
                     else
                     {
-                        f.EndTimer--;
-                        if (f.EndTimer <= 0)
+                        r.EndTimer--;
+                        if (r.EndTimer <= 0)
                         {
-                            Visitor v = f.VisitorQueue.Dequeue();
-                            v.Status = VisitorsStatus.WAITING;
-
+                            Visitor v = r.VisitorQueue.Dequeue();
+                            if (!v.Leaving)
+                            {
+                                v.Status = VisitorsStatus.WAITING;
+                                v.Satiety += r.HungerBoost;
+                            }
                         }
                     }
                 }
-                foreach (Facility f in _games)
+                foreach (Game g in _games)
                 {
-                    if (!f.IsBuilt)
+                    if (!g.IsBuilt)
                     {
-                        f.BuildTime--;
-                        if (f.BuildTime < 0) f.IsBuilt = true;
+                        g.BuildTime--;
+                        if (g.BuildTime < 0) g.IsBuilt = true;
                     }
 
-                    if (f.EndTimer <= 0)
+                    if (g.EndTimer <= 0)
                     {
-                        if (f.VisitorQueue.Count >= (f as Game).MinCapacity)
+                        if (g.VisitorQueue.Count >= g.MinCapacity)
                         {
-                            if (f.VisitorQueue.Count >= f.MaxCapacity)
+                            if (g.VisitorQueue.Count >= g.MaxCapacity)
                             {
-                                (f as Game).ActLoad = f.MaxCapacity;
+                                g.ActLoad = g.MaxCapacity;
                             }
                             else
                             {
-                                (f as Game).ActLoad = f.VisitorQueue.Count;
+                                g.ActLoad = g.VisitorQueue.Count;
                             }
-                            Visitor[] vis = f.VisitorQueue.ToArray();
-                            f.EndTimer = f.Duration;
-                            for (int i = 0; i < (f as Game).ActLoad; i++)
+                            Visitor[] vis = g.VisitorQueue.ToArray();
+                            g.EndTimer = g.Duration;
+                            for (int i = 0; i < g.ActLoad; i++)
                             {
-                                vis[i].Status = VisitorsStatus.AT_ACTIVITY;
-
-                                vis[i].Money -= (f as Game).TicketPrice;
+                                if (!vis[i].Leaving)
+                                {
+                                    vis[i].Status = VisitorsStatus.AT_ACTIVITY;
+                                    vis[i].Money -= g.TicketPrice;
+                                }
+                                else g.ActLoad--;
                             }
-                            Money += (f as Game).TicketPrice * (f as Game).ActLoad;
-                            (f as Game).IsOperating = true;
+                            Money += g.TicketPrice * g.ActLoad;
+                            g.IsOperating = true;
                         }
                     }
                     else
                     {
-                        f.EndTimer--;
-                        if (f.EndTimer <= 0)
+                        g.EndTimer--;
+                        if (g.EndTimer <= 0)
                         {
-                            for (int i = 0; i < (f as Game).ActLoad; i++)
+                            for (int i = 0; i < g.ActLoad; i++)
                             {
-                                Visitor v = f.VisitorQueue.Dequeue();
+                                Visitor v = g.VisitorQueue.Dequeue();
+                                if (!v.Leaving)
+                                {
                                 v.Status = VisitorsStatus.WAITING;
+                                v.Mood += g.MoodBoost;
+                                }
                             }
-                            (f as Game).IsOperating = false;
+                            g.IsOperating = false;
                         }
                     }
                 }
-                foreach (Facility f in _restrooms)
+                foreach (Restroom r in _restrooms)
                 {
-                    if (!f.IsBuilt)
+                    if (!r.IsBuilt)
                     {
-                        f.BuildTime = 0;
-                        f.BuildTime--;
-
-                        if (f.BuildTime < 0) f.IsBuilt = true;
+                        r.BuildTime--;
+                        if (r.BuildTime < 0) r.IsBuilt = true;
                     }
-                    if (f.EndTimer <= 0)
+                    if (r.EndTimer <= 0)
                     {
-                        if (f.VisitorQueue.Count >= 1)
+                        if (r.VisitorQueue.Count >= 1)
                         {
-                            Visitor[] vis = f.VisitorQueue.ToArray();
-                            f.EndTimer = f.Duration;
-
-                            vis[0].Status = VisitorsStatus.AT_ACTIVITY;
+                            Visitor[] vis = r.VisitorQueue.ToArray();
+                            if (!vis[0].Leaving)
+                            {
+                                vis[0].Status = VisitorsStatus.AT_ACTIVITY;
+                                r.EndTimer = r.Duration;   
+                            }
                         }
                     }
                     else
                     {
-                        f.EndTimer--;
-                        if (f.EndTimer <= 0)
+                        r.EndTimer--;
+                        if (r.EndTimer <= 0)
                         {
-                            f.VisitorQueue.Dequeue().Status = VisitorsStatus.WAITING;
+                            Visitor v = r.VisitorQueue.Dequeue();
+                            if (!v.Leaving)
+                            {
+                                v.Status = VisitorsStatus.WAITING;
+                                v.RestroomNeeds = 100;
+                            }
                         }
                     }
                 }
@@ -289,7 +323,11 @@ namespace WeShallNotPass.Model
             foreach (Visitor v in _visitors)
             {
                 v.VisitorTick(Restrooms, Restaurants, Games, mainEntrance, GameArea, GameAreaSize);
-                VisitorUpdated?.Invoke(this, new VisitorEventArgs(v));
+                if (_visitors.Contains(v)) VisitorUpdated?.Invoke(this, new VisitorEventArgs(v));
+                if (v.Mood == 0 && !v.Leaving)
+                {
+                    v.NextActivity(_restrooms, _restaurants, _games, mainEntrance, _gameArea, _gameAreaSize);
+                }
             }
 
 
@@ -480,7 +518,7 @@ namespace WeShallNotPass.Model
             else if (imgNumber == 2) img = "/Images/characters/green.png";
             else img = "/Images/characters/cyan.png";
 
-            int visitorMoney = 300;
+            int visitorMoney = random.Next(20, 50) * 10;
 
             // There is a 40% chance, that the visitor has a coupon while campaigning
             bool hasCoupon = CampaignTime > 0 && random.Next(100) < 60;
@@ -492,7 +530,7 @@ namespace WeShallNotPass.Model
             }
 
 
-            Visitor v = new Visitor(6 * 64, 13 * 64, visitorMoney, random.Next(20, 100), random.Next(20, 100), 1, new Uri(img, UriKind.Relative));
+            Visitor v = new Visitor(6 * 64, 13 * 64, visitorMoney, random.Next(20, 100), random.Next(20, 100), random.Next(70, 100), new Uri(img, UriKind.Relative));
             Visitors.Add(v);
             VisitorUpdated?.Invoke(this, new VisitorEventArgs(v));
             v.VisitorArrived += VisitorArrived;
@@ -501,6 +539,7 @@ namespace WeShallNotPass.Model
         private void VisitorArrived(object sender, VisitorEventArgs e)
         {
             Visitor visitor = (Visitor)sender;
+            visitor.WaitTime = 0;
             if (visitor.Destination is MainEntrance)
             {
                 RemoveVisitor(visitor);
@@ -514,8 +553,13 @@ namespace WeShallNotPass.Model
 
         private void RemoveVisitor(Visitor v)
         {
-            Visitors.Remove(v);
-            VisitorRemoved(this, new VisitorEventArgs(v));
+            List<Visitor> list = new List<Visitor>();
+            foreach (Visitor vi in _visitors)
+            {
+                if (vi != v) list.Add(vi);
+            }
+            _visitors = list;
+            VisitorRemoved?.Invoke(this, new VisitorEventArgs(v));
         }
 
         public void ChangeTimer(string sp)

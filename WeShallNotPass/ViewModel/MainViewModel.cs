@@ -192,11 +192,10 @@ namespace WeShallNotPass.ViewModel
             {
                 ind++;
             }
-
             if (ind < Items.Count)
             {
                 Items.RemoveAt(ind);
-                OnPropertyChanged("VisitorCount");
+                OnPropertyChanged("Items");
             }
         }
 
@@ -245,7 +244,7 @@ namespace WeShallNotPass.ViewModel
             ShopItems.Add(new ShopItemViewModel("Óriáskerék",
                 new Uri("/Images/gifs/ferris_wheel.gif", UriKind.Relative),
                 2, 2, 3600, 60,
-                new Game(-1, -1, "Körhinta", 2, 2, new Uri("/Images/stills/ferris_wheel.gif", UriKind.Relative), 3600, 60, 24, 60, 40, _model.GameArea, 12, 70, 390, 30),
+                new Game(-1, -1, "Óriáskerék", 2, 2, new Uri("/Images/stills/ferris_wheel.gif", UriKind.Relative), 3600, 60, 24, 60, 40, _model.GameArea, 12, 70, 390, 30),
                 new DelegateCommand(t => ManageSelection(t as ShopItemViewModel))));
             ShopItems.Add(new ShopItemViewModel("Kamikaze",
                 new Uri("/Images/gifs/roller.gif", UriKind.Relative),
@@ -271,6 +270,11 @@ namespace WeShallNotPass.ViewModel
                 new Uri("/Images/restaurant2.png", UriKind.Relative),
                 2, 2, 1200, 23,
                 new Restaurant(-1, -1, "Kávézó", 2, 2, new Uri("/Images/restaurant2.png", UriKind.Relative), 1200, 23, 14, 260, 5, _model.GameArea, 5, 5, 20),
+                new DelegateCommand(t => ManageSelection(t as ShopItemViewModel))));
+            ShopItems.Add(new ShopItemViewModel("Mosdó",
+                new Uri("/Images/toilet.png", UriKind.Relative),
+                1, 1, 1200, 20,
+                new Restroom(-1, -1, "Mosdó", 1, 1, new Uri("/Images/toilet.png", UriKind.Relative), 1200, 20, 1, 150, 10, _model.GameArea),
                 new DelegateCommand(t => ManageSelection(t as ShopItemViewModel))));
         }
 

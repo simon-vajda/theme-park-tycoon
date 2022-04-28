@@ -54,11 +54,11 @@ namespace WeShallNotPass
             {
                 case "normal":
                     _timer.Start();
-                    _timer.Interval = new TimeSpan(0, 0, 0, 0, 100);
+                    _timer.Interval = new TimeSpan(0, 0, 0, 0, 50);
                     break;
                 case "fast":
                     _timer.Start();
-                    _timer.Interval = new TimeSpan(0, 0, 0, 0, 50);
+                    _timer.Interval = new TimeSpan(0, 0, 0, 0, 25);
                     break;
                 case "stop":
                     _timer.Stop();

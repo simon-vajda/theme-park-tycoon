@@ -28,6 +28,7 @@
     <None Remove="Images\stills\roller.gif" />
     <None Remove="Images\stills\rollercoaster.gif" />
     <None Remove="Images\ticket_office.png" />
+    <None Remove="Images\toilet.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -64,6 +65,7 @@
     <Resource Include="Images\stills\roller.gif" />
     <Resource Include="Images\stills\rollercoaster.gif" />
     <Resource Include="Images\ticket_office.png" />
+    <Resource Include="Images\toilet.png" />
   </ItemGroup>
 
 </Project>
