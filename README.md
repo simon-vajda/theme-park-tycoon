@@ -8,3 +8,5 @@ Features:
 - Visitors will chose a destination based on the mood and hunger, and walk there on the road network
 - Facilities have waiting ques, which can affect the mood of people if it is too long
 - The player can run campaigns to boost the number of visitors, and earn more revenue
+
+![theme-park-tycoon](https://user-images.githubusercontent.com/43452607/218339387-56cc3e1b-d542-4366-9159-ee5be78da7d8.png)
